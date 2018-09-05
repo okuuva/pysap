@@ -19,6 +19,9 @@
 
 
 # Standard imports
+from __future__ import unicode_literals
+
+import six
 import struct
 from datetime import datetime
 # External imports
@@ -39,7 +42,7 @@ class PacketNoPadded(Packet):
     """Regular scapy packet with no padding.
     """
     def extract_padding(self, s):
-        return '', s
+        return b'', s
 
 
 class RandByteReduced(RandNum):
@@ -119,8 +122,8 @@ class StrNullFixedLenField(StrFixedLenField):
 
     def i2repr(self, pkt, v):
         if self.null_terminated(pkt):
-            if type(v) is str:
-                v = v.rstrip("\0")
+            if type(v) is six.binary_type:
+                v = v.rstrip(b"\x00")
             return repr(v)
         return StrFixedLenField.i2repr(self, pkt, v)
 
@@ -133,7 +136,7 @@ class StrNullFixedLenField(StrFixedLenField):
     def addfield(self, pkt, s, val):
         if self.null_terminated(pkt):
             l = self.length_from(pkt) - 1
-            return s + struct.pack("%is" % l, self.i2m(pkt, val)) + "\x00"
+            return s + struct.pack("%is" % l, self.i2m(pkt, val)) + b"\x00"
         return StrFixedLenField.addfield(self, pkt, s, val)
 
     def randval(self):
@@ -141,7 +144,7 @@ class StrNullFixedLenField(StrFixedLenField):
             try:
                 l = self.length_from(None) - 1
             except:
-                l = RandTermString(RandNum(0, self.max_length), "\x00")
+                l = RandTermString(RandNum(0, self.max_length), b"\x00")
             return RandBin(l)
         return StrFixedLenField.randval(self)
 
@@ -152,7 +155,7 @@ class StrFixedLenPaddedField(StrFixedLenField):
     """
     __slots__ = ["length_from", "padd"]
 
-    def __init__(self, name, default, length=None, length_from=None, padd=" "):
+    def __init__(self, name, default, length=None, length_from=None, padd=b" "):
         StrFixedLenField.__init__(self, name, default, length, length_from)
         self.padd = padd
 
@@ -172,13 +175,13 @@ class StrNullFixedLenPaddedField(StrFixedLenField):
     """
     __slots__ = ["length_from", "padd"]
 
-    def __init__(self, name, default, length=None, length_from=None, padd=" "):
+    def __init__(self, name, default, length=None, length_from=None, padd=b" "):
         StrFixedLenField.__init__(self, name, default, length, length_from)
         self.padd = padd
 
     def getfield(self, pkt, s):
         l = self.length_from(pkt)
-        lz = s.find("\x00")
+        lz = s.find(b"\x00")
         if lz < l:
             return s[l + 1:], self.m2i(pkt, s[:lz])
         return s[l + 1:], self.m2i(pkt, s[:l])
