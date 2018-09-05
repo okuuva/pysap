@@ -454,7 +454,7 @@ class SAPCARArchiveFile(object):
         :return: timestamp in numeric format
         :rtype: int
         """
-        return self._file_format.timestamp
+        return int(self._file_format.timestamp)
 
     @property
     def checksum(self):
@@ -547,7 +547,7 @@ class SAPCARArchiveFile(object):
         archive_file = cls()
         archive_file._file_format = ff()
         archive_file._file_format.perm_mode = fil_stat.st_mode
-        archive_file._file_format.timestamp = fil_stat.st_atime
+        archive_file._file_format.timestamp = int(fil_stat.st_atime)
         archive_file._file_format.file_length = fil_stat.st_size
         archive_file._file_format.filename = archive_filename
         archive_file._file_format.filename_length = len(archive_filename)
