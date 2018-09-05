@@ -120,13 +120,13 @@ class PySAPCAR(object):
 
         # Check the mode the archive file should be opened
         if options.list or options.extract:
-            self.mode = "r"
+            self.mode = "rb"
         elif options.create:
-            self.mode = "w"
+            self.mode = "wb"
         elif options.append:
-            self.mode = "r+"
+            self.mode = "rb+"
         else:  # default to read mode
-            self.mode = "r"
+            self.mode = "rb"
 
         # Opens the input/output file
         if options.filename:
