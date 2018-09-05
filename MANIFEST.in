@@ -5,6 +5,7 @@ include README.md
 include requirements.txt
 include requirements-docs.txt
 include requirements-optional.txt
+include requirements-tests.txt
 
 # Include header files
 include pysapcompress/*.h
