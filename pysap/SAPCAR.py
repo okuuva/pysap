@@ -685,6 +685,8 @@ class SAPCARArchive(object):
 
         if "r" in mode:
             self.read()
+            if "+" in mode:  # Convert archive when appending but not when reading
+                self.version = version
         else:
             self.create()
             self.version = version

@@ -31,7 +31,8 @@ from os import path
 from testfixtures import LogCapture
 from tests.utils import data_filename
 from pysap.sapcarcli import PySAPCAR
-from pysap.SAPCAR import SAPCARArchive, SAPCARArchiveFile, SAPCARInvalidFileException, SAPCARInvalidChecksumException
+from pysap.SAPCAR import SAPCARArchive, SAPCARArchiveFile, SAPCARInvalidFileException, SAPCARInvalidChecksumException,\
+    SAPCAR_VERSION_201
 
 
 class PySAPCARCLITest(unittest.TestCase):
@@ -84,7 +85,9 @@ class PySAPCARCLITest(unittest.TestCase):
         with mock.patch("pysap.sapcarcli.SAPCARArchive") as mock_archive:
             mock_archive.side_effect = Exception("unit test exception")
             self.assertIsNone(self.cli.open_archive())
-            mock_archive.assert_called_once_with(self.cli.archive_fd, mode=self.cli.mode)
+            mock_archive.assert_called_once_with(
+                self.cli.archive_fd, mode=self.cli.mode, version=SAPCAR_VERSION_201
+            )
 
     def test_open_archive_succeeds(self):
         self.assertIsInstance(self.cli.open_archive(), SAPCARArchive)
@@ -134,7 +137,7 @@ class PySAPCARCLITest(unittest.TestCase):
 
     def test_append_open_fails(self):
         with mock.patch.object(self.cli, "open_archive", return_value=None):
-            self.assertIsNone(self.cli.append(None, ["blah"]))
+            self.assertIsNone(self.cli.append(mock.Mock(legacy=False), ["blah"]))
             self.log.check()  # Check that there's no log messages
 
     def test_append_no_renaming(self):
@@ -152,7 +155,7 @@ class PySAPCARCLITest(unittest.TestCase):
         calls.append(mock.call.write())
         with mock.patch.object(self.cli, "open_archive", return_value=mock_sar):
             # Pass copy of names so generator works correctly
-            self.cli.append(None, names[:])
+            self.cli.append(mock.Mock(legacy=False), names[:])
             # self.log.check_present(*debugs)
             self.log.check_present(*infos)
             # For some reason mock_sar.assert_has_calls(calls) fails, even though this passes...
@@ -170,7 +173,7 @@ class PySAPCARCLITest(unittest.TestCase):
         calls.insert(1, mock.call.add_file("test", archive_filename="test"))
         calls.append(mock.call.write())
         with mock.patch.object(self.cli, "open_archive", return_value=mock_sar):
-            self.cli.append(None, names[:])
+            self.cli.append(mock.Mock(legacy=False), names[:])
             self.log.check_present(*infos)
             # For some reason mock_sar.assert_has_calls(calls) fails, even though this passes...
             self.assertEqual(calls, mock_sar.mock_calls)

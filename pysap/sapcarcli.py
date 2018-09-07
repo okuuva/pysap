@@ -27,7 +27,8 @@ from argparse import ArgumentParser
 # Custom imports
 import pysap
 from pysapcompress import DecompressError
-from pysap.SAPCAR import SAPCARArchive, SAPCARInvalidChecksumException, SAPCARInvalidFileException
+from pysap.SAPCAR import SAPCARArchive, SAPCARInvalidChecksumException, SAPCARInvalidFileException, \
+    SAPCAR_VERSION_200, SAPCAR_VERSION_201
 
 
 # Try to import OS-dependent functions
@@ -85,6 +86,8 @@ class PySAPCAR(object):
         parser.add_argument("-a", dest="append", action="store_true", help="Append files to an archive")
         parser.add_argument("-f", dest="filename", help="Archive filename", metavar="FILE")
         parser.add_argument("-o", dest="outdir", help="Path to directory where to extract files")
+        parser.add_argument("--legacy", dest="legacy", action="store_true",
+                            help="Create (or append to) SAPCAR v2.00 archive")
 
         misc = parser.add_argument_group("Misc options")
         misc.add_argument("-v", dest="verbose", action="count", help="Verbose output")
@@ -149,15 +152,17 @@ class PySAPCAR(object):
         finally:
             self.archive_fd.close()
 
-    def open_archive(self):
+    def open_archive(self, legacy_archive=False):
         """Opens the archive file to work with it and returns
         the SAP Car Archive object.
         """
         if not self.archive_fd:
             self.logger.critical("pysapcar: Trying to open archive file before setting it, should not happen")
             return
+
+        version = SAPCAR_VERSION_200 if legacy_archive else SAPCAR_VERSION_201
         try:
-            sapcar = SAPCARArchive(self.archive_fd, mode=self.mode)
+            sapcar = SAPCARArchive(self.archive_fd, mode=self.mode, version=version)
             self.logger.info("pysapcar: Processing archive '%s' (version %s)", self.archive_fd.name, sapcar.version)
         except Exception as e:
             self.logger.error("pysapcar: Error processing archive '%s' (%s)", self.archive_fd.name, e)
@@ -190,8 +195,8 @@ class PySAPCAR(object):
             self.logger.error("pysapcar: no files specified for appending")
             return
 
-        # Open the archive file
-        sapcar = self.open_archive()
+        # Open the archive file for appending / creation
+        sapcar = self.open_archive(legacy_archive=options.legacy)
         if not sapcar:
             return
 
