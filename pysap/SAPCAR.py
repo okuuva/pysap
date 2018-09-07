@@ -306,9 +306,9 @@ class SAPCARArchiveFormat(Packet):
         StrFixedLenField("version", SAPCAR_VERSION_201, 4),
         # Scapy automatically encodes unicode strings, so need to decode packet version in lambda
         ConditionalField(PacketListField("files0", None, SAPCARArchiveFilev200Format),
-                         lambda x: x.version.decode() == SAPCAR_VERSION_200),
+                         lambda x: unicode(x.version) == SAPCAR_VERSION_200),
         ConditionalField(PacketListField("files1", None, SAPCARArchiveFilev201Format),
-                         lambda x: x.version.decode() == SAPCAR_VERSION_201),
+                         lambda x: unicode(x.version) == SAPCAR_VERSION_201),
     ]
 
 
@@ -699,7 +699,7 @@ class SAPCARArchive(object):
         fils = {}
         if self._files:
             for fil in self._files:
-                fils[fil.filename.decode()] = SAPCARArchiveFile(fil)
+                fils[unicode(fil.filename)] = SAPCARArchiveFile(fil)
         return fils
 
     @property
@@ -734,7 +734,7 @@ class SAPCARArchive(object):
         if version not in sapcar_archive_file_versions:
             raise ValueError("Invalid version")
         # If version is different, we should convert each file
-        if version != self._sapcar.version:
+        if version != unicode(self._sapcar.version):
             fils = []
             for fil in self.files.values():
                 new_file = SAPCARArchiveFile.from_archive_file(fil, version=version)
@@ -754,7 +754,7 @@ class SAPCARArchive(object):
         self._sapcar = SAPCARArchiveFormat(self.fd.read())
         if self._sapcar.magic_string not in [SAPCAR_HEADER_MAGIC_STRING_STANDARD, SAPCAR_HEADER_MAGIC_STRING_BACKUP]:
             raise Exception("Invalid or unsupported magic string in file")
-        if self._sapcar.version.decode() not in sapcar_archive_file_versions:
+        if unicode(self._sapcar.version) not in sapcar_archive_file_versions:
             raise Exception("Invalid or unsupported version in file")
 
     @property
