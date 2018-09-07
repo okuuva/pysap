@@ -587,6 +587,13 @@ class SAPCARArchiveFile(object):
         new_archive_file._file_format.file_length = archive_file._file_format.file_length
         new_archive_file._file_format.filename = archive_file._file_format.filename
         new_archive_file._file_format.filename_length = archive_file._file_format.filename_length
+        # This should always be true as this method is only used when converting archive versions, but still better to
+        # check for gotchas
+        if version != archive_file.version:
+            if version == SAPCAR_VERSION_201:
+                new_archive_file._file_format.filename_length += 1
+            else:
+                new_archive_file._file_format.filename_length -= 1
 
         for block in archive_file._file_format.blocks:
             new_block = SAPCARCompressedBlockFormat()
