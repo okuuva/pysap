@@ -734,16 +734,13 @@ class SAPCARArchive(object):
         if version not in sapcar_archive_file_versions:
             raise ValueError("Invalid version")
         # If version is different, we should convert each file
-        if version != unicode(self._sapcar.version):
+        if version != self.version:
             fils = []
             for fil in self.files.values():
                 new_file = SAPCARArchiveFile.from_archive_file(fil, version=version)
                 fils.append(new_file._file_format)
-                self._files.remove(fil._file_format)
             self._sapcar.version = version
-            if self._files is None:
-                self._files = []
-            self._files.extend(fils)
+            self._files = fils
 
     def read(self):
         """Reads the SAP CAR archive file and populates the files list.
