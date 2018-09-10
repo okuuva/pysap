@@ -48,21 +48,23 @@ class PySAPCARTest(unittest.TestCase):
             if path.exists(filename):
                 unlink(filename)
 
-    def check_sapcar_archive(self, filename, version):
+    def check_sapcar_archive(self, filename, version, filenames=None):
         """Test SAP CAR archive file"""
+        if not filenames:
+            filenames = [self.test_filename]
 
         with open(data_filename(filename), "rb") as fd:
             sapcar_archive = SAPCARArchive(fd, mode="r")
 
             self.assertEqual(filename, path.basename(sapcar_archive.filename))
             self.assertEqual(version, sapcar_archive.version)
-            self.assertEqual(1, len(sapcar_archive.files))
-            self.assertEqual(1, len(sapcar_archive.files_names))
-            self.assertListEqual([self.test_filename], sapcar_archive.files_names)
+            self.assertEqual(len(filenames), len(sapcar_archive.files))
+            self.assertEqual(len(filenames), len(sapcar_archive.files_names))
+            self.assertListEqual(filenames, sapcar_archive.files_names)
             if six.PY2:
-                self.assertListEqual([self.test_filename], sapcar_archive.files.keys())
+                self.assertListEqual(filenames, sapcar_archive.files.keys())
             else:
-                self.assertListEqual([self.test_filename], list(sapcar_archive.files.keys()))
+                self.assertListEqual(filenames, list(sapcar_archive.files.keys()))
 
             af = sapcar_archive.open(self.test_filename)
             self.assertEqual(self.test_string, af.read())
@@ -101,6 +103,10 @@ class PySAPCARTest(unittest.TestCase):
         """Test SAP CAR archive file version 2.01"""
 
         self.check_sapcar_archive("car201_test_string.sar", SAPCAR_VERSION_201)
+
+    def test_sapcar_archive_multiple_files(self):
+        filenames = [self.test_filename, "/tmp/foo/second/test_string.txt"]
+        self.check_sapcar_archive("car201_two_test_strings.sar", SAPCAR_VERSION_201, filenames)
 
     def test_sapcar_archive_add_file(self):
         """Test some basic construction of a SAP CAR archive adding from an existent file"""
